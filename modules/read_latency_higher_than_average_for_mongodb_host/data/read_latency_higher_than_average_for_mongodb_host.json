@@ -1,0 +1,150 @@
+{
+  "name": "read_latency_higher_than_average_for_mongodb_host",
+  "description": "This incident type involves an alert triggered when read latency is higher than usual for a MongoDB host. The alert is triggered when at least 100% of the average read latency values have been more than 2 deviations above the predicted values during the last 15 minutes. The incident requires monitoring and investigation to identify the root cause of the increased read latency and take appropriate actions to resolve it.",
+  "params": [
+    {
+      "name": "COLLECTION_NAME",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_NAME",
+      "value": ""
+    },
+    {
+      "name": "MONGODB_HOSTNAME",
+      "value": ""
+    },
+    {
+      "name": "CLIENT_IP",
+      "value": ""
+    },
+    {
+      "name": "MONGODB_ATLAS_PORT",
+      "value": ""
+    },
+    {
+      "name": "USERNAME",
+      "value": ""
+    },
+    {
+      "name": "PASSWORD",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Read latency higher than average for MongoDB host.\nThis incident type involves an alert triggered when read latency is higher than usual for a MongoDB host. The alert is triggered when at least 100% of the average read latency values have been more than 2 deviations above the predicted values during the last 15 minutes. The incident requires monitoring and investigation to identify the root cause of the increased read latency and take appropriate actions to resolve it."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 1. Check if MongoDB is running and accessible"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ping ${MONGODB_HOSTNAME}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 2. Check MongoDB connection status"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_HOSTNAME}:${MONGODB_ATLAS_PORT} -u ${USERNAME} -p ${PASSWORD} --authenticationDatabase admin --eval \"db.runCommand({ping:1})\"`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 3. Check if there are any MongoDB operations currently running"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_HOSTNAME}:${MONGODB_ATLAS_PORT} -u ${USERNAME} -p ${PASSWORD} --authenticationDatabase admin --eval \"db.currentOp()\"`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 4. Check MongoDB latency"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongostat --host ${MONGODB_HOSTNAME} --port ${MONGODB_ATLAS_PORT}`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 5. Check the status of MongoDB indexes"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_HOSTNAME}:${MONGODB_ATLAS_PORT}/${DATABASE_NAME} -u ${USERNAME} -p ${PASSWORD} --authenticationDatabase admin --eval \"db.${COLLECTION_NAME}.getIndexes()\"`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 6. Check MongoDB disk usage"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_HOSTNAME}:${MONGODB_ATLAS_PORT}/${DATABASE_NAME} -u ${USERNAME} -p ${PASSWORD} --authenticationDatabase admin --eval \"db.stats()\"`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 7. Check the read latency for the MongoDB host"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_network_latency_check($DATABASE_NAME, $MONGODB_HOSTNAME, $CLIENT_IP, $MONGODB_ATLAS_PORT, $USERNAME, $PASSWORD)"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Optimize the MongoDB configuration settings to reduce read latency."
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_config_mongo()"
+    }
+  ]
+}
